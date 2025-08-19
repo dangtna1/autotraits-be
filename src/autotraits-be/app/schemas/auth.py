@@ -10,6 +10,7 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
     breeder_name: Optional[str] = None  # allow breeder creation at signup
+    role: Optional[str] = "user"
 
 
 class UserInDB(UserBase):
