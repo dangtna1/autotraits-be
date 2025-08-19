@@ -1,0 +1,19 @@
+name: Mirror to Personal Repo
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Push to mirror repo
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "actions@github.com"
+          git remote add mirror https://x-access-token:${{ secrets.MIRROR_TOKEN }}@github.com/dangtna1/autotraits-be.git
+          git push mirror main --force
