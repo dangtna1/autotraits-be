@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from datetime import timedelta
 
 from app.schemas.auth import UserCreate, UserInDB, Token
-from app.db.models.plant import User, Breeder
+from app.db.models import User, Breeder
 from app.dependencies import get_db
 from app.core.security import (
     hash_password,
@@ -23,7 +23,7 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    # create breeder if provided
+    breeder = None
     if user.breeder_name:
         breeder = db.query(Breeder).filter(Breeder.name == user.breeder_name).first()
         if not breeder:
@@ -31,15 +31,18 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
             db.add(breeder)
             db.commit()
             db.refresh(breeder)
-    else:
-        raise HTTPException(status_code=400, detail="Breeder name required")
+    elif user.role != "admin":
+        # breeder required for normal users
+        raise HTTPException(
+            status_code=400, detail="Breeder name required for non-admins"
+        )
 
     db_user = User(
         email=user.email,
         hashed_password=hash_password(user.password),
         full_name=user.full_name,
-        role="admin",
-        breeder_id=breeder.id,
+        role=user.role or "user",
+        breeder_id=breeder.id if breeder else None,
     )
     db.add(db_user)
     db.commit()

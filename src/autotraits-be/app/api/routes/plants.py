@@ -7,7 +7,7 @@ from app.schemas.plant import *
 from app.crud import plant as crud
 from app.dependencies import get_db
 from app.api.routes.auth import get_current_user
-from app.db.models.plant import User
+from app.db.models import User, Role
 
 router = APIRouter()
 
@@ -19,14 +19,22 @@ def create_plant_route(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    # enforce breeder_id
-    return crud.create_plant(db, plant, current_user.breeder_id)
+    if current_user.role == Role.ADMIN:
+        # Admin can assign plant to any breeder explicitly
+        if not plant.breeder_id:
+            raise HTTPException(status_code=400, detail="breeder_id required for admin")
+        return crud.create_plant(db, plant, plant.breeder_id)
+    else:
+        # Normal breeder: force their own breeder_id
+        return crud.create_plant(db, plant, current_user.breeder_id)
 
 
 @router.get("/plants/", response_model=List[PlantInDB])
 def list_plants_route(
     db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
+    if current_user.role == Role.ADMIN:
+        return crud.get_all_plants(db)  # all plants
     return crud.get_all_plants(db, current_user.breeder_id)
 
 
@@ -36,7 +44,11 @@ def get_plant_route(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    plant = crud.get_plant(db, plant_id, current_user.breeder_id)
+    if current_user.role == Role.ADMIN:
+        plant = crud.get_plant(db, plant_id)
+    else:
+        plant = crud.get_plant(db, plant_id, current_user.breeder_id)
+
     if not plant:
         raise HTTPException(status_code=404, detail="Plant not found")
     return plant
@@ -48,6 +60,8 @@ def delete_plant_route(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    if current_user.role == Role.ADMIN:
+        return crud.delete_plant(db, plant_id)
     return crud.delete_plant(db, plant_id, current_user.breeder_id)
 
 

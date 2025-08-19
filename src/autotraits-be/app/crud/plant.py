@@ -12,19 +12,21 @@ def create_plant(db: Session, plant: PlantCreate, breeder_id: int):
     return db_plant
 
 
-def get_plant(db: Session, plant_id: str, breeder_id: int):
-    return (
-        db.query(Plant)
-        .filter(Plant.plant_id == plant_id, Plant.breeder_id == breeder_id)
-        .first()
-    )
+def get_plant(db: Session, plant_id: str, breeder_id: Optional[int] = None):
+    query = db.query(Plant).filter(Plant.plant_id == plant_id)
+    if breeder_id:
+        query = query.filter(Plant.breeder_id == breeder_id)
+    return query.first()
 
 
-def get_all_plants(db: Session, breeder_id: int):
-    return db.query(Plant).filter(Plant.breeder_id == breeder_id).all()
+def get_all_plants(db: Session, breeder_id: Optional[int] = None):
+    query = db.query(Plant)
+    if breeder_id:
+        query = query.filter(Plant.breeder_id == breeder_id)
+    return query.all()
 
 
-def delete_plant(db: Session, plant_id: str, breeder_id: int):
+def delete_plant(db: Session, plant_id: str, breeder_id: Optional[int] = None):
     plant = get_plant(db, plant_id, breeder_id)
     if plant:
         db.delete(plant)

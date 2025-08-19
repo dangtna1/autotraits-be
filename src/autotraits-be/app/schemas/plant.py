@@ -2,16 +2,20 @@ from pydantic import BaseModel
 from typing import Optional, List
 from datetime import date
 
+
 # ======== PLANT ========
 class PlantBase(BaseModel):
     plant_id: str
 
+
 class PlantCreate(PlantBase):
     pass
 
+
 class PlantInDB(PlantBase):
     class Config:
-        form_attributes = True
+        from_attributes = True
+
 
 # ======== MEASUREMENT ========
 class MeasurementBase(BaseModel):
@@ -31,8 +35,10 @@ class MeasurementBase(BaseModel):
     plant_height: Optional[float] = None
     exg: Optional[float] = None
 
+
 class MeasurementCreate(MeasurementBase):
     pass
+
 
 class MeasurementUpdate(BaseModel):
     biomass: Optional[float]
@@ -41,11 +47,13 @@ class MeasurementUpdate(BaseModel):
     ripe: Optional[int] = None
     # ...
 
+
 class MeasurementInDB(MeasurementBase):
     id: int
 
     class Config:
-        form_attributes = True
+        from_attributes = True
+
 
 # ======== FILE ========
 class FileBase(BaseModel):
@@ -54,11 +62,13 @@ class FileBase(BaseModel):
     file_path: str
     file_type: str
 
+
 class FileCreate(FileBase):
     pass
+
 
 class FileInDB(FileBase):
     id: int
 
     class Config:
-        form_attributes = True
+        from_attributes = True
